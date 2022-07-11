@@ -7,8 +7,8 @@ mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 
 #for this case, the count or cast "shadow" is random or unrelated to the mask
 count = []
 
-#Fills our count array randomly. 100 signifies no x-ray hits
-#10 signifies an x-ray hit
+#Fills our count array randomly. 10 signifies no x-ray hits
+#100 signifies an x-ray hit
 for x in range(len(mask)):
     pick = random.choice(range(0, 2))
     if pick == 1:
