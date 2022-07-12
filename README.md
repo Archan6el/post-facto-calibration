@@ -8,8 +8,7 @@ Clone this repo with:
 
 Each folder will have its own readme with information about its contents
 
-Simply run any program file using python3, for example with a codedaperture file ("VERSION" in place for the kind of codedaperture file you want to run): 
-`python3 codedaperture-[VERSION].py` 
+All program files can be ran using python3
 
 
 There are python libraries needed to run the code. If not already installed, install them on Linux with
