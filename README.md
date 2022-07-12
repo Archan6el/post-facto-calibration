@@ -19,6 +19,4 @@ pip3 install random
 ```
 *For looking at README files from the root "postfacto" directory:*
 
-For info about coded apertures:
-
-`cat codedaperture/README.md`
+For info about coded apertures: `cat codedaperture/README.md`
