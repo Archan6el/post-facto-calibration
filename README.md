@@ -5,7 +5,7 @@
 Clone this repo with:
 
 `git clone https://github.com/Archan6el/post-facto-calibration`
-<br /><br />
+
 Each folder will have its own readme with information about its contents
 
 Simply run any program file using python3, for example with a codedaperture file: 
