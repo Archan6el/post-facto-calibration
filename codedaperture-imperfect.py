@@ -19,7 +19,7 @@ for x in range(len(mask)):
 for x in range(len(count)):
     if count[x] == 100:
         pick = random.choice(range(1, 11))
-        if pick < 6:
+        if pick < 4:
             if (x < len(count)):
                 count[x + 1] = 100
 
