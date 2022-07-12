@@ -1,31 +1,35 @@
+# imperfection trial 3 - 11:25 AM
+
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 
 #the mask is static
-mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1]
+mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1
+, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0 ,1, 1, 1]
 #for this case, the count or cast "shadow" is almost an exact shadow of the mask, with some imperfections
 count = []
 
+
 #Fills our count array perfectly. 10 signifies no x-ray hits
 #100 signifies an x-ray hit
-for x in range(len(mask)):
+for x in range(len(mask) - len(count)):
     if mask[x] == 0:
-
-        count.append(10)
+        count.append(20 * (random.choice(range(10,100)) / 100 + 1) )
     else:
-        count.append(100)
+        count.append(100 * (random.choice(range(1,5)) / 100 + 1) )
 
-#Has x rays bleed into other bins in more randomized way, creating MORE imperfections
+
+#Has x rays bleed into other bins in MORE MORE randomized way, creating MORE imperfections
 for x in range(len(count)):
     pick = random.choice(range(1, 4))
     
     if(x != 0 & x != len(count)):
-        pickRan = random.choice(range(1, 10))
+        pickRan = random.choice(range(30, 60))
         add = count[x]*pick/10
         #if(pickRan < 5):
         #    add = -count[x]*pick/10*(-1)
-        count[x] = count[x] + add
+        count[x] = count[x] - add
         count[x-1] = count[x-1] + add
         count[x-1] = count[x-1] + add
     else:
