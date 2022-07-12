@@ -31,6 +31,25 @@ def coef(arr1, arr2):
 cc = []
 
 #Keeps shifting the count array, calculates the correlation coefficient
+#between the shifted to the left count array and the mask
+#and appends it to the correlation array
+
+for x in range(len(mask)):
+    
+    shifting = np.pad(count, (0, x), mode='constant')[x:]
+    shifted = shifting.tolist()
+    if (len(shifted) > 0):
+        co = coef(mask, shifted)
+        cc.append(co)
+    else:
+        co = coef(mask, count)
+        cc.append(co)
+
+#Reversing our cc array here ensures that the center of the bar graph is the case where there is no shift
+temp = cc
+cc = temp[::-1]
+
+#Keeps shifting the count array, calculates the correlation coefficient
 #between the shifted to the right count array and the mask
 #and appends it to the correlation array
 
@@ -40,20 +59,6 @@ for x in range(len(mask)):
     shifted = shifting.tolist()
     if (len(shifted) > 0):
         co = coef(mask, shifted)
-        cc.append(co)
-    else:
-        co = coef(mask, count)
-        cc.append(co)
-
-#Keeps shifting the count array, calculates the correlation coefficient
-#between the shifted to the left count array and the mask
-#and appends it to the correlation array
-for x in range(len(mask)):
-    
-    shifting = np.pad(count, (0, x), mode='constant')[x:]
-    
-    if (len(shifted) > 0):
-        co = coef(mask, shifting.tolist())
         cc.append(co)
     else:
         co = coef(mask, count)
@@ -72,16 +77,22 @@ for x in range(len(mask) * 2):
 #Everything after this is plotting our graphs
 figure, axis = plt.subplots(3)
 
+plt.rc_context({'axes.autolimit_mode': 'round_numbers'})
+
 axis[0].bar(xaxis, mask)
 axis[0].set_title("Mask")
 
 axis[1].bar(xaxis, count)
 axis[1].set_title("Counts")
 
+
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
+axis[2].set_xticklabels(xaxiscc, rotation=65)
 
 figure.tight_layout()
 figure.set_figheight(5)
 figure.set_figwidth(25)
+#figure.subplots_adjust(bottom = 0.6)
+
 plt.show()
