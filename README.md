@@ -13,7 +13,7 @@ Simply run any of the 4 files using python3 and 3 graphs will automatically be g
 `python3 codedaperture-[VERSION].py` 
 <br /><br />
 
-There are python libraries needed to run the code. If not already installed, install them in a Linux terminal with
+There are python libraries needed to run the code. If not already installed, install them on Linux with
 
 `pip3 install matplotlib`<br />
 `pip3 install numpy` <br />
