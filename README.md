@@ -8,8 +8,7 @@ Clone this repo with:
 <br /><br />
 Each folder will have its own readme with information about its contents
 
-Simply run any program file using python3  
-For example with a codedaperture file: <br />
+Simply run any program file using python3, for example with a codedaperture file: <br />
 `python3 codedaperture-[VERSION].py` 
 <br /><br />
 
