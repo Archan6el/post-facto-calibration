@@ -13,7 +13,8 @@ Simply run any program file using python3, for example with a codedaperture file
 
 
 There are python libraries needed to run the code. If not already installed, install them on Linux with
-
-`pip3 install matplotlib`
-`pip3 install numpy` 
-`pip3 install random`
+```
+pip3 install matplotlib
+pip3 install numpy 
+pip3 install random
+```
