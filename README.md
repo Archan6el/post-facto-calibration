@@ -8,9 +8,9 @@ Clone this repo with:
 
 Each folder will have its own readme with information about its contents
 
-For coded apertures:
+For info about coded apertures:
 
-`cd codedaperture`
+`cat /codedaperture/README.md`
 
 All program files can be ran using python3
 
