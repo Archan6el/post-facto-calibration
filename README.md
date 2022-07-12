@@ -8,8 +8,7 @@ Clone this repo with:
 <br /><br />
 Each folder will have its own readme with information about its contents
 
-Simply run any of the 4 files using python3 and 3 graphs will automatically be generated. The first graph is the mask, the second graph is the counts (cast shadow), and the third is the cross correlation graph between the mask and shadow. 
-
+Simply run any program file using python3  
 For example with a codedaperture file: <br />
 `python3 codedaperture-[VERSION].py` 
 <br /><br />
