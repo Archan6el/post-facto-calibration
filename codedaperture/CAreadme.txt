@@ -7,7 +7,7 @@ All of them share the same mask, which is where they are similar
 After running any one of the program files, 3 graphs will automatically be generated. 
 The first graph is the mask, the second graph is the counts (cast shadow), and the third is the cross correlation graph between the mask and shadow. 
 
-
+Detail as to where the 4 files differ:
 codedaperture-perfect.py has its counts graph as a perfect shadow of the mask
 codedaperture-imperfect.py has its counts graph as essentially a perfect shadow of the mask, but x-rays bleed into adjacent bins
 codedaperture-zeroShifted has its counts graph as a perfect shadow of the mask, but shifted left or right to varying degrees
