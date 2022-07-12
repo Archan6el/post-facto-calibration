@@ -87,7 +87,7 @@ axis[0].bar(xaxis, mask)
 axis[0].set_title("Mask")
 
 axis[1].bar(xaxis, count)
-axis[1].set_title("Counts")
+axis[1].set_title("Shifted Counts")
 
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
