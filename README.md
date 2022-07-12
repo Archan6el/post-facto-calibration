@@ -10,7 +10,7 @@ Each folder will have its own readme with information about its contents
 
 For coded apertures:
 
-`cd codedapertures`
+`cd codedaperture`
 
 All program files can be ran using python3
 
