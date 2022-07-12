@@ -17,7 +17,7 @@ pip3 install matplotlib
 pip3 install numpy 
 pip3 install random
 ```
-
+*For looking at README files from the root "postfacto" directory:*
 
 For info about coded apertures:
 
