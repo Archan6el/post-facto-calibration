@@ -88,7 +88,7 @@ axis[1].set_title("Counts")
 
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
-axis[2].set_xticklabels(xaxiscc, rotation=65)
+axis[2].tick_params(axis='x', rotation=65)
 
 figure.tight_layout()
 figure.set_figheight(5)

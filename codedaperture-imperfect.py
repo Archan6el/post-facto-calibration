@@ -16,11 +16,12 @@ for x in range(len(mask)):
     else:
         count.append(100)
 
+#Has x rays bleed into other bins, creating imperfections
 for x in range(len(count)):
     if count[x] == 100:
         pick = random.choice(range(1, 11))
-        if pick < 4:
-            if (x < len(count)):
+        if pick < 7:
+            if (x < len(count) - 1):
                 count[x + 1] = 100
 
 
@@ -89,12 +90,9 @@ axis[0].set_title("Mask")
 axis[1].bar(xaxis, count)
 axis[1].set_title("Counts")
 
-print(len(cc))
-print(len(xaxiscc))
-
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
-axis[2].set_xticklabels(xaxiscc, rotation=65)
+axis[2].tick_params(axis='x', rotation=65)
 
 figure.tight_layout()
 figure.set_figheight(5)
