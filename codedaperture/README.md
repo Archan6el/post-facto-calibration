@@ -7,6 +7,8 @@ All of them share the same mask, which is where they are similar
 After running any one of the program files, 3 graphs will automatically be generated. 
 The first graph is the mask, the second graph is the counts (cast shadow), and the third is the cross correlation graph between the mask and shadow. 
 
+From the center of the cross correlation graph, moving left from center is shifting the count array left. Moving right from center is shifting the count array right
+
 Detail as to where the 4 files differ:
 
 "codedaperture-perfect.py" has its counts graph as a perfect shadow of the mask
