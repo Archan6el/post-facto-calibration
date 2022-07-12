@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from collections import deque
 import numpy as np
 import random
 
@@ -8,12 +7,6 @@ mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 
 #for this case, the count or cast "shadow" is almost an exact shadow of the mask, but shifted
 count = []
 
-
-#Up to the 'i'th index of count, everything before is zero-ed out
-#'i'th number is a random choice between range ONE and lenght of mask
-for x in range( random.choice(range(1, len(mask))) ):
-    count.append(0)
-
 #Fills our count array perfectly. 10 signifies no x-ray hits
 #100 signifies an x-ray hit
 for x in range(len(mask) - len(count)):
@@ -21,6 +14,17 @@ for x in range(len(mask) - len(count)):
         count.append(10)
     else:
         count.append(100)
+
+#Up to the 'i'th index of count, everything before is zero-ed out
+#'i'th number is a random choice between range ONE and lenght of mask
+direction = random.choice(range(0, 2))
+if direction == 1:
+    x = random.choice(range(len(mask)))
+    print(x)
+    count = np.pad(count, (x, 0), mode='constant')[:-x]
+else:
+    x = random.choice(range(len(mask)))
+    count = np.pad(count, (0, x), mode='constant')[x:]
 
 #calculates coefficient correlation of 2 arrays
 def coef(arr1, arr2):
@@ -87,12 +91,9 @@ axis[0].set_title("Mask")
 axis[1].bar(xaxis, count)
 axis[1].set_title("Counts")
 
-print(len(cc))
-print(len(xaxiscc))
-
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
-axis[2].set_xticklabels(xaxiscc, rotation=65)
+axis[2].tick_params(axis='x', rotation=65)
 
 figure.tight_layout()
 figure.set_figheight(5)
