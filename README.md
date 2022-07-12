@@ -10,7 +10,7 @@ Each folder will have its own readme with information about its contents
 
 For info about coded apertures:
 
-`cat /codedaperture/README.md`
+`cat codedaperture/README.md`
 
 All program files can be ran using python3
 
