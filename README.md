@@ -18,6 +18,7 @@ pip3 install numpy
 pip3 install random
 ```
 
+
 For info about coded apertures:
 
 `cat codedaperture/README.md`
