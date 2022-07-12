@@ -19,8 +19,9 @@ for x in range(len(mask)):
 for x in range(len(count)):
     if count[x] == 100:
         pick = random.choice(range(1, 11))
-        if pick < 8:
-            count[x + 1] == 100
+        if pick < 6:
+            if (x < len(count)):
+                count[x + 1] = 100
 
 
 #calculates coefficient correlation of 2 arrays
