@@ -5,17 +5,22 @@ import random
 
 #the mask is static
 mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1]
-#for this case, the count or cast "shadow" is random or unrelated to the mask
+#for this case, the count or cast "shadow" is almost an exact shadow of the mask, with some imperfections
 count = []
 
-#Fills our count array randomly. 10 signifies no x-ray hits
+#Fills our count array perfectly. 10 signifies no x-ray hits
 #100 signifies an x-ray hit
 for x in range(len(mask)):
-    pick = random.choice(range(0, 2))
-    if pick == 1:
+    if mask[x] == 1:
         count.append(10)
     else:
         count.append(100)
+
+for x in range(len(count)):
+    if count[x] == 100:
+        pick = random.choice(range(1, 11))
+        if pick < 8:
+            count[x + 1] == 100
 
 
 #calculates coefficient correlation of 2 arrays
@@ -77,6 +82,9 @@ axis[0].set_title("Mask")
 
 axis[1].bar(xaxis, count)
 axis[1].set_title("Counts")
+
+print(len(cc))
+print(len(xaxiscc))
 
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
