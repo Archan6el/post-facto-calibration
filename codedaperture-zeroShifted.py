@@ -4,7 +4,7 @@ import random
 
 #the mask is static
 mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1]
-#for this case, the count or cast "shadow" is almost an exact shadow of the mask, but shifted
+#for this case, the count or cast "shadow" is an exact shadow of the mask, but shifted
 count = []
 
 #Fills our count array perfectly. 10 signifies no x-ray hits
