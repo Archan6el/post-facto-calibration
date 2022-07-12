@@ -4,7 +4,8 @@ The 4 files within this folder are variations of each other.
 They all differ in terms of the count, or shadow cast from the mask, resulting in different cross correlation graphs. 
 All of them share the same mask, which is where they are similar
 
-After running any one of the program files, 3 graphs will automatically be generated. The first graph is the mask, the second graph is the counts (cast shadow), and the third is the cross correlation graph between the mask and shadow. 
+After running any one of the program files, 3 graphs will automatically be generated. 
+The first graph is the mask, the second graph is the counts (cast shadow), and the third is the cross correlation graph between the mask and shadow. 
 
 
 codedaperture-perfect.py has its counts graph as a perfect shadow of the mask
