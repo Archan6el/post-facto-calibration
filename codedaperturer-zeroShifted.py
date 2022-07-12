@@ -15,8 +15,7 @@ for x in range(len(mask) - len(count)):
     else:
         count.append(100)
 
-#Up to the 'i'th index of count, everything before is zero-ed out
-#'i'th number is a random choice between range ONE and lenght of mask
+#Randomly chooses to shift the count array left or right by varying degrees
 direction = random.choice(range(0, 2))
 if direction == 1:
     x = random.choice(range(len(mask)))
