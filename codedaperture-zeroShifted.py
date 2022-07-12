@@ -19,7 +19,6 @@ for x in range(len(mask) - len(count)):
 direction = random.choice(range(0, 2))
 if direction == 1:
     x = random.choice(range(len(mask)))
-    print(x)
     count = np.pad(count, (x, 0), mode='constant')[:-x]
 else:
     x = random.choice(range(len(mask)))
