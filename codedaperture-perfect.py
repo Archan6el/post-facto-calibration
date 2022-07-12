@@ -4,18 +4,16 @@ import random
 
 #the mask is static
 mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1]
-#for this case, the count or cast "shadow" is random or unrelated to the mask
+#for this case, the count or cast "shadow" is almost an exact shadow of the mask
 count = []
 
-#Fills our count array randomly. 10 signifies no x-ray hits
+#Fills our count array perfectly. 10 signifies no x-ray hits
 #100 signifies an x-ray hit
 for x in range(len(mask)):
-    pick = random.choice(range(0, 2))
-    if pick == 0:
+    if mask[x] == 0:
         count.append(10)
     else:
         count.append(100)
-
 
 #calculates coefficient correlation of 2 arrays
 def coef(arr1, arr2):
@@ -29,7 +27,7 @@ def coef(arr1, arr2):
 #Our cross correlation array
 cc = []
 
-#Keeps shifting the count array, calculates the correlation coefficient
+#Keeps shifting the count array left, calculates the correlation coefficient
 #between the shifted to the left count array and the mask
 #and appends it to the correlation array
 
@@ -48,7 +46,7 @@ for x in range(len(mask)):
 temp = cc
 cc = temp[::-1]
 
-#Keeps shifting the count array, calculates the correlation coefficient
+#Keeps shifting the count array right, calculates the correlation coefficient
 #between the shifted to the right count array and the mask
 #and appends it to the correlation array
 
@@ -76,14 +74,11 @@ for x in range(len(mask) * 2):
 #Everything after this is plotting our graphs
 figure, axis = plt.subplots(3)
 
-plt.rc_context({'axes.autolimit_mode': 'round_numbers'})
-
 axis[0].bar(xaxis, mask)
 axis[0].set_title("Mask")
 
 axis[1].bar(xaxis, count)
 axis[1].set_title("Counts")
-
 
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
@@ -92,6 +87,4 @@ axis[2].tick_params(axis='x', rotation=65)
 figure.tight_layout()
 figure.set_figheight(5)
 figure.set_figwidth(25)
-#figure.subplots_adjust(bottom = 0.6)
-
 plt.show()
