@@ -17,7 +17,7 @@ for x in range( random.choice(range(1, len(mask))) ):
 #Fills our count array perfectly. 10 signifies no x-ray hits
 #100 signifies an x-ray hit
 for x in range(len(mask) - len(count)):
-    if mask[x] == 1:
+    if mask[x] == 0:
         count.append(10)
     else:
         count.append(100)
