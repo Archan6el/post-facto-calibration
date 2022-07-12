@@ -2,10 +2,12 @@ This folder is for files related to coded apertures
 
 To run the files (Make sure you are in the codedaperture directory):
 
+```
 python3 codedaperture-perfect.py
 python3 codedaperture-imperfect.py
 python3 codedaperture-zeroShifted.py
 python3 codedaperture-randomcount.py
+```
 
 The 4 files within this folder are variations of each other. 
 They all differ in terms of the count, or shadow cast from the mask, resulting in different cross correlation graphs. 
