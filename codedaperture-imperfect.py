@@ -37,7 +37,7 @@ def coef(arr1, arr2):
 #Our cross correlation array
 cc = []
 
-#Keeps shifting the count array, calculates the correlation coefficient
+#Keeps shifting the count array left, calculates the correlation coefficient
 #between the shifted to the left count array and the mask
 #and appends it to the correlation array
 
@@ -56,7 +56,7 @@ for x in range(len(mask)):
 temp = cc
 cc = temp[::-1]
 
-#Keeps shifting the count array, calculates the correlation coefficient
+#Keeps shifting the count array right, calculates the correlation coefficient
 #between the shifted to the right count array and the mask
 #and appends it to the correlation array
 
