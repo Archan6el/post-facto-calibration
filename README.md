@@ -6,11 +6,7 @@ Clone this repo with:
 
 `git clone https://github.com/Archan6el/post-facto-calibration`
 
-Each folder will have its own readme with information about its contents
-
-For info about coded apertures:
-
-`cat codedaperture/README.md`
+**Each folder will have its own readme with information about its contents**
 
 All program files can be ran using python3
 
@@ -21,3 +17,7 @@ pip3 install matplotlib
 pip3 install numpy 
 pip3 install random
 ```
+
+For info about coded apertures:
+
+`cat codedaperture/README.md`
