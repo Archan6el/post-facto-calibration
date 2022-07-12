@@ -5,7 +5,7 @@ import random
 
 #the mask is static
 mask = [1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1]
-#for this case, the count or cast "shadow" is almost an exact shadow of the mask, with some imperfections
+#for this case, the count or cast "shadow" is almost an exact shadow of the mask, but shifted
 count = []
 
 
@@ -21,11 +21,6 @@ for x in range(len(mask) - len(count)):
         count.append(10)
     else:
         count.append(100)
-
-
-
-
-
 
 #calculates coefficient correlation of 2 arrays
 def coef(arr1, arr2):
