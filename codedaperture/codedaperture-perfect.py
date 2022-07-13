@@ -15,51 +15,8 @@ for x in range(len(mask)):
     else:
         count.append(100)
 
-#calculates coefficient correlation of 2 arrays
-def coef(arr1, arr2):
-    coefficient = 0
-    for x in range(len(arr1)):
-        num = arr1[x] * arr2[x]
-        coefficient += num
-
-    return coefficient
-
 #Our cross correlation array
-cc = []
-
-#Keeps shifting the count array left, calculates the correlation coefficient
-#between the shifted to the left count array and the mask
-#and appends it to the correlation array
-
-for x in range(len(mask)):
-    
-    shifting = np.pad(count, (0, x), mode='constant')[x:]
-    shifted = shifting.tolist()
-    if (len(shifted) > 0):
-        co = coef(mask, shifted)
-        cc.append(co)
-    else:
-        co = coef(mask, count)
-        cc.append(co)
-
-#Reversing our cc array here ensures that the center of the bar graph is the case where there is no shift
-temp = cc
-cc = temp[::-1]
-
-#Keeps shifting the count array right, calculates the correlation coefficient
-#between the shifted to the right count array and the mask
-#and appends it to the correlation array
-
-for x in range(len(mask)):
-    
-    shifting = np.pad(count, (x, 0), mode='constant')[:-x]
-    shifted = shifting.tolist()
-    if (len(shifted) > 0):
-        co = coef(mask, shifted)
-        cc.append(co)
-    else:
-        co = coef(mask, count)
-        cc.append(co)
+cc = np.correlate(mask, count, "full")
 
 #Used only for the x axis of our mask and count graphs
 xaxis = []
@@ -68,7 +25,7 @@ for x in range(len(mask)):
 
 #Used only for the x axis of our cross correlation graph
 xaxiscc = []
-for x in range(len(mask) * 2):
+for x in range(len(cc)):
     xaxiscc.append(str(x + 1))
 
 #Everything after this is plotting our graphs
