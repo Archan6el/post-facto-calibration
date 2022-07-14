@@ -4,7 +4,7 @@ import random
 
 #the mask is static of 70 zeros and ones
 mask = [1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1]
-#for this case, the count or cast "shadow" is random and unrelated to the mask
+#for this case, the count or cast "shadow" is randomly generated and unrelated to the mask
 count = []
 #Contains our extrapolated mask
 extrapMask = []
