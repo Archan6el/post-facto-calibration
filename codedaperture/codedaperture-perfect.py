@@ -19,7 +19,7 @@ for x in range(400):
     else:
         extrapMask.append(100)
 
-#Extrapolated Mask. In this case, since the shadow is perfectly aligned with the mask
+#In this case, since the shadow is perfectly aligned with the mask
 #it would be identical to our extrapolated mask
 count = extrapMask
 
