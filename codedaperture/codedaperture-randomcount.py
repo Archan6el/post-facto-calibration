@@ -19,6 +19,7 @@ for x in range(400):
     else:
         extrapMask.append(100)
 
+#Randomly fills in our count/shadow array
 for x in range(1, 400):
     pick = random.choice(range(0, 2))
     if pick == 1:
@@ -47,11 +48,9 @@ axis[1].set_title("Random Counts")
 
 axis[2].bar(xaxiscc, cc)
 axis[2].set_title("Cross Correlation")
-axis[2].tick_params(axis='x', rotation=65)
 
 figure.tight_layout()
 figure.set_figheight(5)
 figure.set_figwidth(25)
-#figure.subplots_adjust(bottom = 0.6)
 
 plt.show()
