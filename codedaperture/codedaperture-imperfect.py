@@ -38,23 +38,18 @@ for x in range(len(count)):
 #Our cross correlation array
 cc = np.correlate(mask, count, "full")
 
-#Used only for the x axis of our mask and count graphs
-xaxis = []
-for x in range(len(mask)):
-    xaxis.append(str(x + 1))
-
-#Used only for the x axis of our cross correlation graph
-xaxiscc = []
-for x in range(len(cc)):
-    xaxiscc.append(str(x + 1))
+#X axes of graphs
+xaxisForMask = np.arange(0, len(mask), 1)
+xaxisForCount = np.arange(0, len(count), 1)
+xaxiscc = np.arange(0, len(cc), 1)
 
 #Everything after this is plotting our graphs
 figure, axis = plt.subplots(3)
 
-axis[0].bar(xaxis, mask)
+axis[0].bar(xaxisForMask, mask)
 axis[0].set_title("Mask")
 
-axis[1].bar(xaxis, count)
+axis[1].bar(xaxisForCount, count)
 axis[1].set_title("Imperfect Counts")
 
 axis[2].bar(xaxiscc, cc)
