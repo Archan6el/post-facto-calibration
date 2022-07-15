@@ -1,3 +1,9 @@
+"""
+FAILED ATTEMPT AT SIGMOID REGRESSION
+SUCCESSFUL AT LINEAR
+"""
+
+
 from pyclbr import readmodule_ex
 from numpy import array, exp, real
 from scipy.optimize import curve_fit
@@ -31,7 +37,7 @@ mask_real = [1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
 # some parameters of the run -- we might want to find a way to
 # encapsulate them so that we can do sweeps by passing around a single
 # object
-n_photons = 100
+n_photons = 1000
 noise_fraction = 0.0
 distortion_dial = 0.9           # limits are [0, 1]
 
@@ -287,17 +293,17 @@ def createScipy():
 
     #plotting the graphs here
     #yfit# -> the # correlates to the highest degree of exponent of the highest x
-    plt.plot(x, y, 'bo', label="y-original")
+    plt.plot(x, y, 'bo', label="photons hitting")
     plt.plot(x, yfit1, label="linear regression")
     plt.plot(x, yfit2, label="quadratic regression")
     plt.plot(x, yfit3, label="cubic regression")
-    #plt.plot(x, yfitSig, label="sigmoid")
+    plt.plot(x, yfitSig, label="attempt at sigmoid")
     #plt.plot(x, yfit4, label="y=a*exp(b*x)+c")
     #plt.plot(x, yfit4, label="y=a*exp(b*x)+c")
 
 
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('det_pos_cm')
+    plt.ylabel('distorted_pos_cm')
     plt.legend(loc='best', fancybox=True, shadow=True)
     plt.grid(True)
     plt.show() 
