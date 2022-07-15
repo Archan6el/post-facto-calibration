@@ -1,0 +1,52 @@
+from numpy import array, exp
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
+
+
+
+#empty the array and put real values for x and y
+#length of both arrays should be larger than about 10 for curve to be plottable
+y = array([1, 2, 3, 4])
+x = array([])
+
+#establishes 1st, 2nd, 3rd, and exponential degrees of function
+def func1(x, a, b, c):
+    return a*x**2+b*x+c
+
+def func2(x, a, b, c):
+    return a*x**3+b*x+c
+
+def func3(x, a, b, c):
+    return a*x**3+b*x**2+c
+
+def func4(x, a, b, c):
+    return a*exp(b*x)+c
+
+params, covs = curve_fit(func1, x, y)
+
+params, _ = curve_fit(func1, x, y)
+a, b, c = params[0], params[1], params[2]
+yfit1 = a*x**2+b*x+c
+
+params, _  = curve_fit(func2, x, y)
+a, b, c = params[0], params[1], params[2]
+yfit2 = a*x**3+b*x+c
+
+params, _  = curve_fit(func3, x, y)
+a, b, c = params[0], params[1], params[2]
+yfit3 = a*x**3+b*x**2+c
+
+params, _  = curve_fit(func4, x, y)
+a, b, c = params[0], params[1], params[2]
+yfit4 = a*exp(x*b)+c
+
+plt.plot(x, y, 'bo', label="y-original")
+plt.plot(x, yfit1, label="y=a*x^2+b*x+c")
+plt.plot(x, yfit2, label="y=a*x^3+b*x+c")
+plt.plot(x, yfit3, label="y=a*x^3+b*x^2*c")
+plt.plot(x, yfit4, label="y=a*exp(b*x)+c")
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend(loc='best', fancybox=True, shadow=True)
+plt.grid(True)
+plt.show() 
