@@ -23,7 +23,7 @@ mask_real = [1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
 # object
 n_photons = 100
 noise_fraction = 0.0
-distortion_dial = 0.9          # limits are [0, 1]
+distortion_dial = 0         # limits are [0, 1]
 
 mask = mask_real
 det_height_cm = 18.74
@@ -209,7 +209,8 @@ def apply_distortion(x_real):
 
 
 def createScipy():
-    
+    """Uses scipy to plot our data and curve fitting lines"""
+
     #create dictionary mapping x and y values (x-> key, y->value)
     #sort dict by x and store keys to x, values to y
     count = 0
