@@ -19,10 +19,14 @@ def brisquenr(image):
     return brisque.score(image)
 
 def main():
-     original = img_as_float(io.imread("mega_compressed.jpeg", as_gray=True)) #cv2.imread("original_image.jpeg") 
+     original = img_as_float(io.imread("original_image.jpeg", as_gray=True)) #cv2.imread("original_image.jpeg") 
+     compressed = img_as_float(io.imread("compressed_image.jpeg", as_gray=True))
+     mega_compressed = img_as_float(io.imread("mega_compressed.jpeg", as_gray=True))
      #compressed = cv2.imread("compressed_image.jpeg", 1)
      #print(original)
-     print(brisquenr(original))
+     print("Original: ", brisquenr(original))
+     print("Compressed: ", brisquenr(compressed))
+     print("Mega Compressed: ", brisquenr(mega_compressed))
 
      #value = PSNR(original, compressed)
      #print(f"PSNR value is {value} dB")
