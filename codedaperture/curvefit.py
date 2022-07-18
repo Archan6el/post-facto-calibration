@@ -1,27 +1,11 @@
-"""
-FAILED ATTEMPT AT SIGMOID REGRESSION
-SUCCESSFUL AT LINEAR
-"""
-
-
-from pyclbr import readmodule_ex
-from numpy import array, exp, real
+#! /usr/bin/env python3
+from numpy import exp
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-#! /usr/bin/env python3
-from collections import OrderedDict
-import pdb
-# pdb.set_trace()
-
 import math
 import random
-import scipy
-from scipy import optimize
 import numpy as np
-from scipy import signal
-import matplotlib.pyplot as plt
-from mpl_axes_aligner import align
-import pylab
+from collections import OrderedDict
 
 verbose = False
 
@@ -37,9 +21,9 @@ mask_real = [1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
 # some parameters of the run -- we might want to find a way to
 # encapsulate them so that we can do sweeps by passing around a single
 # object
-n_photons = 1000
+n_photons = 100
 noise_fraction = 0.0
-distortion_dial = 0.9           # limits are [0, 1]
+distortion_dial = 0.9          # limits are [0, 1]
 
 mask = mask_real
 det_height_cm = 18.74
@@ -49,8 +33,9 @@ det_pix_size_cm = 0.0495
 n_det_pix = int(mask_width_cm / det_pix_size_cm + 0.5) # +0.5? or +1? or +0?
 mask_det_offset_cm = (mask_width_cm - det_width_cm) / 2
 
-realX = []
-realY = []
+
+real_vals = []
+naive_vals = []
 
 print(n_det_pix)
 
@@ -85,15 +70,7 @@ def main():
     # finally we can plot what we've done
     #repare_plots(mask, resampled_mask, det_readout, ccor, lag, theta_deg)
     
-    #tried this, too many items in realX and realY so doesn't work
     createScipy()
-
-    #NOT WORKING
-    #createOptimal()
-
-    #NOT WORKING
-    #sigmoidGraph()
-    
 
 
 def gen_readout(mask, angle_deg):
@@ -134,8 +111,8 @@ def gen_readout(mask, angle_deg):
 
 
             #updating array for scipy plotting
-            realX.append(det_pos_cm)
-            realY.append(distorted_pos_cm)
+            real_vals.append(det_pos_cm)
+            naive_vals.append(distorted_pos_cm)
 
         
     return readout
@@ -192,8 +169,6 @@ def prepare_plots(mask, resampled_mask, det_readout, ccor, lag, theta_deg):
               align='edge', color='orange', edgecolor='white', alpha=0.8)
     ax[0].set_title('mask (solid black is closed, orange is open)')
 
-    # ax[1].bar(xaxisForResampledMask, ((np.zeros(len(resampled_mask)) + 1) - resampled_mask),
-    #             color='black')
     ax[1].bar(xaxisForResampledMask, ((np.zeros(len(resampled_mask)) + 1) - resampled_mask),
               width=1.0, align='edge', color='black', edgecolor='white')
     ax[1].bar(xaxisForResampledMask, resampled_mask,
@@ -234,50 +209,44 @@ def apply_distortion(x_real):
 
 
 def createScipy():
-    #empty the array and put real values for x and y
-    y = np.array(realY)
-    x = np.array(realX)
-
+    
     #create dictionary mapping x and y values (x-> key, y->value)
     #sort dict by x and store keys to x, values to y
-    countingVariableNeverUse = 0
+    count = 0
     dict = {}
-    for x in (realX):
-        dict[x] = realY[countingVariableNeverUse]
-        countingVariableNeverUse+=1
+    for i in (real_vals):
+        dict[i] = naive_vals[count]
+        count += 1
     
+    #Sort the dictionary so that all of our data is in order
     dictSorted = OrderedDict(sorted(dict.items()))
 
+    #x and y for our scipy functions
     x = np.array(list (dictSorted.keys()) )
     y = np.array(list (dictSorted.values() ))
 
 
-    #establishes different types of function we want the regression line to be
-    def func1(x, a, b, c):
+    #establishes different types of functions we want the regression line to be
+    def func1(x, a):
         return a*x
 
-    def func2(x, a, b, c):
+    def func2(x, a):
         return a*x**2
 
     def func3(x, a, b, c):
         return a*x**3+b*x**2+c
 
-    # NOT WORKING...!
-    def sigmoid(x, a, b, c):
-        y = 1 / (1 + np.exp(-b*(x-a)))
-        return y
-
-
-    params, covs = curve_fit(func1, x, y)
+    def sigmoid(x, a, b, c, d):
+        return (a / (x - b)) + c + (d*x)
 
     #linear function
     params, _ = curve_fit(func1, x, y)
-    a, b, c = params[0], params[1], params[2]
+    a = params[0]
     yfit1 = a*x
 
     #quadratic function
     params, _  = curve_fit(func2, x, y)
-    a, b, c = params[0], params[1], params[2]
+    a = params[0]
     yfit2 = a*x**2
 
     #cubic function
@@ -285,60 +254,25 @@ def createScipy():
     a, b, c = params[0], params[1], params[2]
     yfit3 = a*x**3+b*x**2+c
 
-    #sigmoid function NOT WORKING
+    #sigmoid function
     params, _  = curve_fit(sigmoid, x, y)
-    a, b, c = params[0], params[1], params[2]
-    yfitSig = 1 / (1 + np.exp(-b*(x-a)))
+    a, b, c, d = params[0], params[1], params[2], params[3]
+    yfitSig = (a / (x - b)) + c + (d*x)
     
 
     #plotting the graphs here
     #yfit# -> the # correlates to the highest degree of exponent of the highest x
-    plt.plot(x, y, 'bo', label="photons hitting")
+    plt.plot(x, y, 'bo', label="y-original")
     plt.plot(x, yfit1, label="linear regression")
     plt.plot(x, yfit2, label="quadratic regression")
     plt.plot(x, yfit3, label="cubic regression")
-    plt.plot(x, yfitSig, label="attempt at sigmoid")
-    #plt.plot(x, yfit4, label="y=a*exp(b*x)+c")
-    #plt.plot(x, yfit4, label="y=a*exp(b*x)+c")
-
-
-    plt.xlabel('det_pos_cm')
-    plt.ylabel('distorted_pos_cm')
+    plt.plot(x, yfitSig, label="sigmoid")
+   
+    plt.xlabel('x')
+    plt.ylabel('y')
     plt.legend(loc='best', fancybox=True, shadow=True)
     plt.grid(True)
     plt.show() 
 
-
-
-"""
-#doesn't work
-def createOptimal():
-    def function(x, a, b):
-        return a*x + b
-
-    x = np.array(realX)
-    y = np.array(realY)
-
-
-    print(len(x))
-    popt,cov = scipy.optimize.curve_fit(function, x, y)
-    a,b= popt
-
-
-    plt.scatter(x,y,color="green")
-    plt.plot(x,y,color="red")
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    print("Estimated value of a : "+ str(a))
-    print("Estimated value of b : " + str(b))
-    plt.show()
-
-"""
-
-
 if __name__ == '__main__':
     main()
-
-
-
-
