@@ -16,6 +16,7 @@ There are python libraries needed to run the code. If not already installed, ins
 pip3 install matplotlib
 pip3 install numpy 
 pip3 install random
+pip3 install scipy
 ```
 *For looking at README files from the root "postfacto" directory:*
 
