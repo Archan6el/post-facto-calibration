@@ -89,7 +89,11 @@ def main():
     print(p, _)
     list = []
     for x in naive_vals:
-        list.append(sigmoid(x, p[0], p[1], p[2], p[3]))
+        num = sigmoid(x, p[0], p[1], p[2], p[3])
+        if num < 0:
+            list.append(0)
+        else: 
+            list.append(sigmoid(x, p[0], p[1], p[2], p[3]))
     #print(pearsonr(real_vals, list))
 
     #print(naive_vals)
@@ -337,7 +341,7 @@ def optimize(mask):
     current_arr, a, b, c, d = gen_random(naive_vals)
     parameters = [a, b, c, d]
 
-    metrics, params, arrays = possible_answers(mask, current_arr)
+    metrics, params, arrays = possible_answers(mask, naive_vals)
     better_metric, better_params, better_arr = get_best(metrics, params, arrays)
     #print(better_metric)
     #better_metric = gen_metric(mask, better_arr)
@@ -345,11 +349,11 @@ def optimize(mask):
     
     while current_metric < better_metric:
 
-        current_arr = better_arr
+        #current_arr = better_arr
         current_metric = better_metric
         parameters = better_params
 
-        metrics, params, arrays = possible_answers(mask, current_arr)
+        metrics, params, arrays = possible_answers(mask, naive_vals)
 
         better_metric, better_params, better_arr = get_best(metrics, params, arrays)
 
