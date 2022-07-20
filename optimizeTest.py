@@ -335,7 +335,7 @@ def optimize(mask):
     current_arr, a, b, c, d = gen_random(naive_vals)
     parameters = [a, b, c, d]
 
-    metrics, params, arrays = possible_answers(mask, current_arr)
+    metrics, params, arrays = possible_answers(mask, naive_vals)
     better_metric, better_params, better_arr = get_best(metrics, params, arrays)
     print(current_metric, better_metric)
     #print(better_metric)
@@ -343,16 +343,16 @@ def optimize(mask):
 
     while current_metric < better_metric:
         
-        current_arr = better_arr
+        #current_arr = better_arr
         current_metric = better_metric
         parameters = better_params
 
-        metrics, params, arrays = possible_answers(mask, current_arr)
+        metrics, params, arrays = possible_answers(mask, naive_vals)
 
         better_metric, better_params, better_arr = get_best(metrics, params, arrays)
         print(current_metric, better_metric)
         
-        print("!")
+        #print("!")
 
         #if ():
         #    break
