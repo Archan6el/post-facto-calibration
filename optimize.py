@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
-from re import X
+#from re import X
 from numpy import exp
-from pendulum import naive
+#from pendulum import naive
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import math
@@ -90,7 +90,7 @@ def main():
     list = []
     for x in naive_vals:
         list.append(sigmoid(x, p[0], p[1], p[2], p[3]))
-    print(pearsonr(real_vals, list))
+    #print(pearsonr(real_vals, list))
 
     #print(naive_vals)
     #print(len(resampled_mask))
@@ -258,15 +258,23 @@ def sigmoid(x, a, b, c, d):
 def gen_random(arr):
     """Generates a random array by running the given array through our
     sigmoid function with random parameters, each being a number from -5 and 5"""
-    a = random.uniform(-5, 5) #1.573374532385897
-    b = random.uniform(-5, 5) #4.019185691943018
-    c = random.uniform(-5, 5) #-4.00502684639661
-    d = random.uniform(-5, 5) #1.359444812728886
+    a = random.uniform(0, 2) #1.573374532385897
+    b = random.uniform(3, 5) #4.019185691943018
+    c = random.uniform(-5, -3) #-4.00502684639661
+    d = random.uniform(0, 2) #1.359444812728886
     
     new = [0]*len(arr)
-    for x in range(len(arr)):
-        new[x] = sigmoid(arr[x], a, b, c, d)
 
+    for x in range(len(arr)):
+        
+        num = sigmoid(arr[x], a, b, c, d)
+        if num < 0:
+            #print("!", end="")
+            new[x] = 0
+        else:
+            new[x] = num
+ 
+    
     return new, a, b, c, d
 
 def gen_metric(mask, count):
@@ -281,7 +289,10 @@ def gen_metric(mask, count):
         if x > max:
             max = x
 
-    return max / ((sum / len(xcor)))
+    if max != 0:
+        return max / ((sum / len(xcor)))
+
+    return 0
 
 def possible_answers(mask, arr):
     """Generates 16 possible answers"""
@@ -293,18 +304,11 @@ def possible_answers(mask, arr):
     while count < len(answers):
         randarr, a, b, c, d = gen_random(arr)
         params = [a, b, c, d]
-        #Tries to prevent negative arrays from being generated, doesn't work however
-        negative = False
-        for x in randarr:
-            if x < 0:
-                negative = True
-                break
         
-        if negative != True:      
-            answers[count] = gen_metric(mask, randarr)
-            param_answers[count] = params
-            arrs[count] = randarr
-            count += 1
+        answers[count] = gen_metric(mask, randarr)
+        param_answers[count] = params
+        arrs[count] = randarr
+        count += 1
 
     return answers, param_answers, arrs
 
@@ -338,7 +342,8 @@ def optimize(mask):
     #print(better_metric)
     #better_metric = gen_metric(mask, better_arr)
 
-    while better_metric < current_metric:
+    
+    while current_metric < better_metric:
 
         current_arr = better_arr
         current_metric = better_metric
@@ -349,9 +354,10 @@ def optimize(mask):
         better_metric, better_params, better_arr = get_best(metrics, params, arrays)
 
         
-        print("!")
+        print(current_metric, better_metric)
+
     
-    return parameters, better_metric
+    return parameters, current_metric
 
 if __name__ == '__main__':
     main()
