@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
-from re import X
+#from re import X
 from numpy import exp
-from pendulum import naive
+#from pendulum import naive
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import math
@@ -255,21 +255,34 @@ def sigmoid(x, a, b, c, d):
         return (a / (x - b)) + c + (d*x)
 
 def gen_random(arr):
-    a = random.uniform(-5, 5)
-    b = random.uniform(-5, 5)
-    c = random.uniform(-5, 5)
-    d = random.uniform(-5, 5)
+    """Generates a random array by running the given array through our
+    sigmoid function with random parameters, each being a number from -5 and 5"""
+    a = random.uniform(0, 2) #1.573374532385897
+    b = random.uniform(3, 5) #4.019185691943018
+    c = random.uniform(-5, -3) #-4.00502684639661
+    d = random.uniform(0, 2) #1.359444812728886
     
     new = [0]*len(arr)
-    for x in range(len(arr)):
-        new[x] = sigmoid(arr[x], a, b, c, d)
 
+    for x in range(len(arr)):
+        
+        num = sigmoid(arr[x], a, b, c, d)
+        if num < 0:
+            #print("!", end="")
+            new[x] = 0
+        else:
+            new[x] = num
+    
     return new, a, b, c, d
 
 def gen_metric(mask, count):
     matrix = np.corrcoef(mask, count)
     #num, _ = pearsonr(mask, count)
-    return matrix[0][1]
+    num = matrix[0][1]
+    if math.isnan(num):
+        return 0
+    else:
+        return num
 
 def possible_answers(mask, arr):
     answers = [0]*16
@@ -278,19 +291,23 @@ def possible_answers(mask, arr):
 
     count = 0
     while count < len(answers):
+        #print("#")
         randarr, a, b, c, d = gen_random(arr)
         params = [a, b, c, d]
+
+        '''
         negative = False
         for x in randarr:
             if x < 0:
                 negative = True
                 break
         
-        if negative != True:      
-            answers[count] = gen_metric(mask, randarr)
-            param_answers[count] = params
-            arrs[count] = randarr
-            count += 1
+        if negative != True:   
+        '''   
+        answers[count] = gen_metric(mask, randarr)
+        param_answers[count] = params
+        arrs[count] = randarr
+        count += 1
 
     return answers, param_answers, arrs
 
@@ -324,8 +341,8 @@ def optimize(mask):
     #print(better_metric)
     #better_metric = gen_metric(mask, better_arr)
 
-    while better_metric < current_metric:
-
+    while current_metric < better_metric:
+        
         current_arr = better_arr
         current_metric = better_metric
         parameters = better_params
@@ -336,33 +353,12 @@ def optimize(mask):
         print(current_metric, better_metric)
         
         print("!")
+
+        #if ():
+        #    break
     
-    return parameters, better_metric
+    return parameters, current_metric
 
-    #for x in naive_vals:
-    #    better.append(sigmoid(x, a, b, c, d))
-
-    #sigmoid function
-    
-
-    #return better
-
-    #print(a, b, c, d)
-    #yfitSig = (a / (x - b)) + c + (d*x)
-    #print(yfitSig)
-
-    '''
-    #plotting the graphs here
-    #yfit# -> the # correlates to the highest degree of exponent of the highest x
-    plt.plot(x, y, 'bo', label="y-original")
-    plt.plot(x, yfitSig, label="sigmoid")
-   
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.legend(loc='best', fancybox=True, shadow=True)
-    plt.grid(True)
-    plt.show() 
-    '''
 
 if __name__ == '__main__':
     main()
