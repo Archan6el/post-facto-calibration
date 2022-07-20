@@ -60,7 +60,7 @@ naive_vals = [7.3970739043175255, 9.969043927071004, 11.155687103627523, 12.6177
 
 def main():
     # find the detector readout for a given angle
-    theta_deg = -15              # incidence angle, 0 if perpendicular
+    theta_deg = 0             # incidence angle, 0 if perpendicular
     det_readout = gen_readout(mask, theta_deg)
     if verbose:
         print(det_readout)
@@ -263,7 +263,8 @@ def sigmoid(x, a, b, c, d):
 
 def gen_random(arr):
     """Generates a random array by running the given array through our
-    sigmoid function with random parameters, each being a number from -5 and 5"""
+    sigmoid function with random parameters. Commented values are the real parameters
+    found while curve fitting"""
     a = random.uniform(0, 2) #1.573374532385897
     b = random.uniform(3, 5) #4.019185691943018
     c = random.uniform(-5, -3) #-4.00502684639661
@@ -284,7 +285,7 @@ def gen_random(arr):
     return new, a, b, c, d
 
 def gen_metric(mask, count):
-    """Generates our metric"""
+    """Generates our metric which is ratio of xcor peak to the mean"""
     xcor = np.correlate(mask, count, 'full')
     
     sum = xcor[0]
@@ -301,10 +302,10 @@ def gen_metric(mask, count):
     return 0
 
 def possible_answers(mask, arr):
-    """Generates 16 possible answers"""
-    answers = [0]*16
-    arrs = [0]*16
-    param_answers = [0]*16
+    """Generates 16 possible answers (Estimated real-value arrays)"""
+    answers = [0]*100
+    arrs = [0]*100
+    param_answers = [0]*100
 
     count = 0
     while count < len(answers):
@@ -319,13 +320,13 @@ def possible_answers(mask, arr):
     return answers, param_answers, arrs
 
 def get_best(metric_arr, param_arr, arrs):
-    """Retrieves the best metric from the output of our possible_answers function"""
+    """Retrieves the best parameters, array, and metric from the output of our possible_answers function"""
     max = metric_arr[0]
-    #num = abs(max - 132)
+    #num = abs(1.7230645480516713 - max)
 
     for x in range(len(metric_arr)):
-        #numx = abs(metric_arr[x] - 132)
-        if metric_arr[x] > max: #numx < num: 
+        #numx = abs(1.7230645480516713 - metric_arr[x])
+        if metric_arr[x] < max: #numx < num:  
             max = metric_arr[x]
 
     index = metric_arr.index(max)
@@ -359,7 +360,6 @@ def optimize(mask):
 
         better_metric, better_params, better_arr = get_best(metrics, params, arrays)
 
-        
         print(current_metric, better_metric)
 
     
