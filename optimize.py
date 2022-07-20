@@ -102,12 +102,12 @@ def main():
     print(list)
     
 
-    xcor_og = np.correlate(resampled_mask, naive_vals, 'full')
-    xcor_new = np.correlate(resampled_mask, list, 'full')
+    #xcor_og = np.correlate(resampled_mask, naive_vals, 'full')
+    #xcor_new = np.correlate(resampled_mask, list, 'full')
     #print(len(xcor_og))
     #print(len(xcor_new))
     # finally we can plot what we've done
-    prepare_plots(mask, resampled_mask, det_readout, xcor_og, xcor_new, lag, theta_deg)
+    prepare_plots(mask, resampled_mask, det_readout, list, lag, theta_deg)
     #print(xcor_og)
     #print(xcor_new)
     
@@ -189,7 +189,7 @@ def mask_pos_angle_consistent(mask, det_pos_cm, angle_deg):
     return valid
 
 
-def prepare_plots(mask, resampled_mask, det_readout, ccor_original, ccor_new, lag, theta_deg):
+def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg):
     """At this time all the plotting stuff is shoved here"""
     # X axes of graphs
     xaxisForMask = np.arange(0, len(mask), 1)
@@ -197,9 +197,9 @@ def prepare_plots(mask, resampled_mask, det_readout, ccor_original, ccor_new, la
     xaxisForResampledMask = np.arange(0, len(resampled_mask), 1)
     # xaxisForCount = np.arange(0, mask_width_cm, mask_width_cm / len(det_readout))
     xaxisForCount = np.arange(0, len(det_readout), 1)
-    xaxiscc = [] #np.arange(0, len(ccor_original), 1) - len(ccor_original) // 2
-    for x in range(0, len(ccor_original)):
-        xaxiscc.append(x)
+    #xaxiscc = [] #np.arange(0, len(ccor_original), 1) - len(ccor_original) // 2
+    #for x in range(0, len(ccor_original)):
+    #    xaxiscc.append(x)
    
     # Everything after this is plotting our graphs
     figure, ax = plt.subplots(5, constrained_layout=True, figsize=(15, 10))
@@ -226,11 +226,13 @@ def prepare_plots(mask, resampled_mask, det_readout, ccor_original, ccor_new, la
     ax[2].set_title('detector readout (x-axis is in mask coordinate frame)')
 
     # OK, I confess I'm not sure how "lag" is measured
-    ax[3].bar(xaxiscc, ccor_original, color='green')
-    ax[3].set_title(f'Original Cross Correlation (bars) - lag is {lag}')
+    #ax[3].bar(xaxiscc, ccor_original, color='green')
+    ax[3].scatter(real_vals, naive_vals)
+    ax[3].set_title(f'x = real | y = naive - lag is {lag}')
 
-    ax[4].bar(xaxiscc, ccor_new)
-    ax[4].set_title(f'New Cross Correlation (stems) - lag is {lag}')
+    #ax[4].bar(xaxiscc, ccor_new)
+    ax[4].scatter(estimated, naive_vals)
+    ax[4].set_title(f'x = estimated real | y = naive {lag}')
 
     # align.xaxes(ax[1], mask_width_cm/2, ax[2], mask_width_cm/2, 0.5)
 
