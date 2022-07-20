@@ -8,7 +8,7 @@ import math
 import random
 import numpy as np
 from collections import OrderedDict
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 from sqlalchemy import true
 
 verbose = False
@@ -37,13 +37,12 @@ det_pix_size_cm = 0.0495
 n_det_pix = int(mask_width_cm / det_pix_size_cm + 0.5) # +0.5? or +1? or +0?
 mask_det_offset_cm = (mask_width_cm - det_width_cm) / 2
 
-real_vals = [6.469734334222604, 9.784052567573474, 11.474638288210137, 13.406001371509154, 5.124122238459028, 
-8.670306055808428, 13.659288940313875, 5.297207584460752, 12.73294619565659, 6.319152276787557, 6.3742820516493985, 
-13.39196114701655, 6.358093320772113, 8.71800295958431, 14.771520458874143, 8.783450052669053, 5.551411782503367, 12.484310979785706, 
-6.333214380034148, 11.391418126730192, 5.294702883206989, 14.567437407495762, 14.432565049737184, 5.885980328261018, 13.282191152849387, 
-13.821279973323424, 12.49730970949375, 13.359009180834827, 5.015696434882418, 14.287221887784723, 14.290726077821917, 12.680744592323386, 
-5.8375652049353, 6.432723947587867, 11.447987933892616, 8.462971823896137, 13.782194899739583, 14.585071755827398, 8.597955794141917, 4.563227469719163, 
-14.532076521708426, 13.45381226483366, 11.399196401468917, 5.609731014005759, 4.4128439741784025, 9.541330302988955, 14.857282524729818]
+real_vals = [6.469734334222604, 9.784052567573474, 11.474638288210137, 13.406001371509154, 5.124122238459028, 8.670306055808428, 13.659288940313875, 
+5.297207584460752, 12.73294619565659, 6.319152276787557, 6.3742820516493985, 13.39196114701655, 6.358093320772113, 8.71800295958431, 14.771520458874143, 
+8.783450052669053, 5.551411782503367, 12.484310979785706, 6.333214380034148, 11.391418126730192, 5.294702883206989, 14.567437407495762, 14.432565049737184, 
+5.885980328261018, 13.282191152849387, 13.821279973323424, 12.49730970949375, 13.359009180834827, 5.015696434882418, 14.287221887784723, 14.290726077821917, 
+12.680744592323386, 5.8375652049353, 6.432723947587867, 11.447987933892616, 8.462971823896137, 13.782194899739583, 14.585071755827398, 8.597955794141917, 
+4.563227469719163, 14.532076521708426, 13.45381226483366, 11.399196401468917, 5.609731014005759, 4.4128439741784025, 9.541330302988955, 14.857282524729818]
 
 naive_vals = [7.3970739043175255, 9.969043927071004, 11.155687103627523, 12.617701152923114, 6.123859566884064, 9.16935366898281, 12.826263691058397, 
 6.296776490272765, 12.085119883216763, 7.2625490530895425, 7.312024898348968, 12.606277592882027, 7.297523473333458, 9.204513512933907, 13.802673377001007, 
@@ -52,6 +51,7 @@ naive_vals = [7.3970739043175255, 9.969043927071004, 11.155687103627523, 12.6177
 12.045010855316573, 6.819076373612105, 7.364189250750114, 11.136676975410673, 9.015279703393345, 12.929208492162473, 13.631702172380752, 9.11582195969817, 
 5.544784441802859, 13.58366037204009, 12.656708210126384, 11.101925112961588, 6.6020812812407685, 5.384706992405885, 9.797815213631731, 13.882345225200464]
 
+xcor_og = np.correlate(real_vals, naive_vals, 'full')
 #print(pearsonr(real_vals, naive_vals))
 
 #print(n_det_pix)
@@ -84,7 +84,6 @@ def main():
     # trick to get the lag
     lag = ccor.argmax() - (len(resampled_mask) - 1)
 
-    
     p, _ = optimize(real_vals)
     print(p, _)
     list = []
@@ -98,13 +97,13 @@ def main():
     print(list)
     
 
-    xcor_og = np.correlate(real_vals, naive_vals, 'full')
+    
     xcor_new = np.correlate(real_vals, list, 'full')
     #print(len(xcor_og))
     #print(len(xcor_new))
     # finally we can plot what we've done
     #prepare_plots(mask, resampled_mask, det_readout, xcor_og, xcor_new, lag, theta_deg)
-    prepare_plots(mask, resampled_mask, det_readout, list, lag, theta_deg)
+    prepare_plots(mask, resampled_mask, det_readout, list, lag, theta_deg, xcor_og, xcor_new)
     #print(xcor_og)
     #print(xcor_new)
     
@@ -186,7 +185,7 @@ def mask_pos_angle_consistent(mask, det_pos_cm, angle_deg):
     return valid
 
 
-def prepare_plots(mask, resampled_mask, det_readout, new, lag, theta_deg):
+def prepare_plots(mask, resampled_mask, det_readout, new, lag, theta_deg, ccor_original, ccor_new):
     """At this time all the plotting stuff is shoved here"""
     # X axes of graphs
     xaxisForMask = np.arange(0, len(mask), 1)
@@ -195,8 +194,8 @@ def prepare_plots(mask, resampled_mask, det_readout, new, lag, theta_deg):
     # xaxisForCount = np.arange(0, mask_width_cm, mask_width_cm / len(det_readout))
     xaxisForCount = np.arange(0, len(det_readout), 1)
     xaxiscc = [] #np.arange(0, len(ccor_original), 1) - len(ccor_original) // 2
-    #for x in range(0, len(ccor_original)):
-    #    xaxiscc.append(x)
+    for x in range(0, len(ccor_original)):
+        xaxiscc.append(x)
    
     # Everything after this is plotting our graphs
     figure, ax = plt.subplots(5, constrained_layout=True, figsize=(15, 10))
@@ -279,34 +278,31 @@ def gen_random(arr):
     return new, a, b, c, d
 
 def gen_metric(mask, count):
-    matrix = np.corrcoef(mask, count)
+
     #num, _ = pearsonr(mask, count)
+    
+    matrix = np.corrcoef(mask, count)
+    
     num = matrix[0][1]
     if math.isnan(num):
         return 0
     else:
         return num
+    
+    #return np.correlate(mask, count)
 
 def possible_answers(mask, arr):
-    answers = [0]*30
-    arrs = [0]*30
-    param_answers = [0]*30
+    """Generates 30 possible answers (Estimated real-value arrays)"""
+    answers = [0]*100
+    arrs = [0]*100
+    param_answers = [0]*100
 
     count = 0
     while count < len(answers):
         #print("#")
         randarr, a, b, c, d = gen_random(arr)
         params = [a, b, c, d]
-
-        '''
-        negative = False
-        for x in randarr:
-            if x < 0:
-                negative = True
-                break
-        
-        if negative != True:   
-        '''   
+ 
         answers[count] = gen_metric(mask, randarr)
         param_answers[count] = params
         arrs[count] = randarr
@@ -333,12 +329,12 @@ def optimize(mask):
     #Actual answer
     #a, b, c, d = 1.573374532385897, 4.019185691943018, -4.00502684639661, 1.359444812728886
 
-    current_metric = gen_metric(real_vals, naive_vals)
+    current_metric = gen_metric(mask, naive_vals)
     #print(current_metric)
     current_arr, a, b, c, d = gen_random(naive_vals)
     parameters = [a, b, c, d]
 
-    metrics, params, arrays = possible_answers(real_vals, naive_vals)
+    metrics, params, arrays = possible_answers(mask, naive_vals)
     better_metric, better_params, better_arr = get_best(metrics, params, arrays)
     print(current_metric, better_metric)
     #print(better_metric)
@@ -350,7 +346,7 @@ def optimize(mask):
         current_metric = better_metric
         parameters = better_params
 
-        metrics, params, arrays = possible_answers(real_vals, naive_vals)
+        metrics, params, arrays = possible_answers(mask, naive_vals)
 
         better_metric, better_params, better_arr = get_best(metrics, params, arrays)
         print(current_metric, better_metric)
