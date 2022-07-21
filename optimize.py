@@ -3,6 +3,7 @@
 from numpy import exp
 #from pendulum import naive
 from scipy.optimize import curve_fit
+from scipy import signal
 import matplotlib.pyplot as plt
 import math
 import random
@@ -45,6 +46,7 @@ real_vals = [6.469734334222604, 9.784052567573474, 11.474638288210137, 13.406001
 5.8375652049353, 6.432723947587867, 11.447987933892616, 8.462971823896137, 13.782194899739583, 14.585071755827398, 8.597955794141917, 4.563227469719163, 
 14.532076521708426, 13.45381226483366, 11.399196401468917, 5.609731014005759, 4.4128439741784025, 9.541330302988955, 14.857282524729818]
 
+
 naive_vals = [7.3970739043175255, 9.969043927071004, 11.155687103627523, 12.617701152923114, 6.123859566884064, 9.16935366898281, 12.826263691058397, 
 6.296776490272765, 12.085119883216763, 7.2625490530895425, 7.312024898348968, 12.606277592882027, 7.297523473333458, 9.204513512933907, 13.802673377001007, 
 9.252594099342495, 6.5457828265494244, 11.89547268828387, 7.275193788274939, 11.096391068874949, 6.294293716908906, 13.615689034680528, 13.494105809955594, 
@@ -84,16 +86,17 @@ def main():
     # trick to get the lag
     lag = ccor.argmax() - (len(resampled_mask) - 1)
 
-    
-    p, _ = optimize(resampled_mask)
-    print(p, _)
+    og_metric = gen_metric(mask, real_vals)
+    #print(len(mask))
+    p, metric = optimize(mask)
+    print(p, metric)
     list = []
     for x in naive_vals:
         num = sigmoid(x, p[0], p[1], p[2], p[3])
         if num < 0:
             list.append(0)
         else: 
-            list.append(sigmoid(x, p[0], p[1], p[2], p[3]))
+            list.append(sigmoid(x, p[0], p[1], p[2], p[3])) #* det_pix_size_cm)
     #print(pearsonr(real_vals, list))
 
     #print(naive_vals)
@@ -106,15 +109,32 @@ def main():
     #xcor_new = np.correlate(resampled_mask, list, 'full')
     #print(len(xcor_og))
     #print(len(xcor_new))
+
     # finally we can plot what we've done
-    prepare_plots(mask, resampled_mask, det_readout, list, lag, theta_deg)
+    prepare_plots(mask, resampled_mask, det_readout, list, lag, theta_deg, og_metric, metric)
     #print(xcor_og)
     #print(xcor_new)
     
 
+    '''
+    print(len(resampled_mask), len(real_vals))
+    xcor = np.correlate(resampled_mask, real_vals, 'full')
+
+    peak_indices, peak_dict = signal.find_peaks(xcor, height=0.3, distance=50)
+    peak_heights = peak_dict['peak_heights']
+
+    #print(peak_dict)
+    highest_peak_index = peak_indices[np.argmax(peak_heights)]
+    second_highest_peak_index = peak_indices[np.argpartition(peak_heights,-2)[-2]]
+
+    highest = xcor[highest_peak_index]
+    second_highest = xcor[second_highest_peak_index]
+
+    print(highest, second_highest)
+
     #print(optimize(resampled_mask))
     #print(gen_metric(resampled_mask, real_vals))
-
+    '''
 
 
 def gen_readout(mask, angle_deg):
@@ -189,7 +209,7 @@ def mask_pos_angle_consistent(mask, det_pos_cm, angle_deg):
     return valid
 
 
-def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg):
+def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg, original_metric, generated_metric):
     """At this time all the plotting stuff is shoved here"""
     # X axes of graphs
     xaxisForMask = np.arange(0, len(mask), 1)
@@ -197,12 +217,17 @@ def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg):
     xaxisForResampledMask = np.arange(0, len(resampled_mask), 1)
     # xaxisForCount = np.arange(0, mask_width_cm, mask_width_cm / len(det_readout))
     xaxisForCount = np.arange(0, len(det_readout), 1)
-    #xaxiscc = [] #np.arange(0, len(ccor_original), 1) - len(ccor_original) // 2
-    #for x in range(0, len(ccor_original)):
-    #    xaxiscc.append(x)
-   
+
+    ccor_original = np.correlate(mask, naive_vals, 'full')
+    ccor_new = np.correlate(mask, estimated, 'full')
+    xaxiscc = [] #np.arange(0, len(ccor_original), 1) - len(ccor_original) // 2
+    for x in range(0, len(ccor_original)):
+        xaxiscc.append(x)
+    
+    
+
     # Everything after this is plotting our graphs
-    figure, ax = plt.subplots(5, constrained_layout=True, figsize=(15, 10))
+    figure, ax = plt.subplots(6, constrained_layout=True, figsize=(15, 10))
     ax[0].axes.yaxis.set_ticklabels([])
     ax[1].axes.yaxis.set_ticklabels([])
 
@@ -226,16 +251,23 @@ def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg):
     ax[2].set_title('detector readout (x-axis is in mask coordinate frame)')
 
     # OK, I confess I'm not sure how "lag" is measured
-    #ax[3].bar(xaxiscc, ccor_original, color='green')
-    ax[3].scatter(real_vals, naive_vals)
-    ax[3].set_title(f'x = real | y = naive - lag is {lag}')
+    ax[3].bar(xaxiscc, ccor_original, color='green')
+    #ax[3].scatter(real_vals, naive_vals)
+    ax[3].set_title(f'Cross Correlation of Mask to Naive - lag is {lag}')
 
-    #ax[4].bar(xaxiscc, ccor_new)
-    ax[4].scatter(estimated, naive_vals)
-    ax[4].set_title(f'x = estimated real | y = naive {lag}')
+    ax[4].bar(xaxiscc, ccor_new)
+    #ax[4].scatter(estimated, naive_vals)
+    ax[4].set_title(f'Cross Correlation of Mask to Estimated - lag is {lag}')
 
-    # align.xaxes(ax[1], mask_width_cm/2, ax[2], mask_width_cm/2, 0.5)
+    ax[5].scatter(real_vals, naive_vals, label='Real to Naive')
+    ax[5].scatter(estimated, naive_vals, label = 'Estimated to Naive')
+    ax[5].set_title(f'Lag is {lag} - Original Metric is {original_metric} - Generated Metric is {generated_metric}')
+    ax[5].legend(loc = 'upper left')
 
+    
+    #ax[6].set_title(f'Estimated to Naive - lag is {lag} - Metric is {generated_metric}')
+
+    #align.xaxes(ax[1], mask_width_cm/2, ax[2], mask_width_cm/2, 0.5)
     """
     for suffix in ['png', 'svg']:
         ofname = f'mask_readout_ccor.{suffix}'
@@ -267,7 +299,7 @@ def gen_random(arr):
     found while curve fitting"""
     a = random.uniform(0, 2) #1.573374532385897
     b = random.uniform(3, 5) #4.019185691943018
-    c = random.uniform(-5, -3) #-4.00502684639661
+    c = random.uniform(-3, -5) #-4.00502684639661
     d = random.uniform(0, 2) #1.359444812728886
     
     new = [0]*len(arr)
@@ -285,9 +317,32 @@ def gen_random(arr):
     return new, a, b, c, d
 
 def gen_metric(mask, count):
-    """Generates our metric which is ratio of xcor peak to the mean"""
-    xcor = np.correlate(mask, count, 'full')
+    """Generates our metric which is ratio of xcor peak to the second highest peak
+    Using this metric gives relatively precise results, though not accurate"""
     
+    try:
+    #print(mask, count)
+        xcor = np.correlate(mask, count, 'full')
+    
+    #print(xcor)
+        #print(xcor)
+    
+        peak_indices, peak_dict = signal.find_peaks(xcor, height=0.2, distance=3)
+        peak_heights = peak_dict['peak_heights']
+
+    #print(peak_dict)
+        highest_peak_index = peak_indices[np.argmax(peak_heights)]
+        second_highest_peak_index = peak_indices[np.argpartition(peak_heights,-2)[-2]]
+
+        highest = xcor[highest_peak_index]
+        second_highest = xcor[second_highest_peak_index]
+        print(highest_peak_index, second_highest_peak_index)
+        return highest - second_highest
+    except:
+        return 0
+
+    
+    '''
     sum = xcor[0]
     max = xcor[0]
 
@@ -300,12 +355,13 @@ def gen_metric(mask, count):
         return max / ((sum / len(xcor)))
 
     return 0
+    '''
 
 def possible_answers(mask, arr):
     """Generates 16 possible answers (Estimated real-value arrays)"""
-    answers = [0]*100
-    arrs = [0]*100
-    param_answers = [0]*100
+    answers = [0]*200
+    arrs = [0]*200
+    param_answers = [0]*200
 
     count = 0
     while count < len(answers):
@@ -326,7 +382,7 @@ def get_best(metric_arr, param_arr, arrs):
 
     for x in range(len(metric_arr)):
         #numx = abs(1.7230645480516713 - metric_arr[x])
-        if metric_arr[x] < max: #numx < num:  
+        if metric_arr[x] > max: #numx < num:  
             max = metric_arr[x]
 
     index = metric_arr.index(max)
@@ -351,7 +407,7 @@ def optimize(mask):
 
     
     while current_metric < better_metric:
-
+        print("!")
         #current_arr = better_arr
         current_metric = better_metric
         parameters = better_params
@@ -360,7 +416,7 @@ def optimize(mask):
 
         better_metric, better_params, better_arr = get_best(metrics, params, arrays)
 
-        print(current_metric, better_metric)
+        #print(current_metric, better_metric)
 
     
     return parameters, current_metric
