@@ -47,91 +47,51 @@ theta_deg = 0             # incidence angle, 0 if perpendicular
  #Initializing our calibrate class within the postfactolib module so that we can access the functions
 pfl = postfactolib.calibrate(mask, mask_width_cm, mask_det_offset_cm, det_width_cm, det_height_cm, n_det_pix, n_photons, theta_deg)
 
-'''
-#Positions of where x rays actually hit the detector
-det_poslist_real = [6.469734334222604, 9.784052567573474, 11.474638288210137, 13.406001371509154, 5.124122238459028, 
-8.670306055808428, 13.659288940313875, 5.297207584460752, 12.73294619565659, 6.319152276787557, 6.3742820516493985, 
-13.39196114701655, 6.358093320772113, 8.71800295958431, 14.771520458874143, 8.783450052669053, 5.551411782503367, 12.484310979785706, 
-6.333214380034148, 11.391418126730192, 5.294702883206989, 14.567437407495762, 14.432565049737184, 5.885980328261018, 13.282191152849387, 
-13.821279973323424, 12.49730970949375, 13.359009180834827, 5.015696434882418, 14.287221887784723, 14.290726077821917, 12.680744592323386, 
-5.8375652049353, 6.432723947587867, 11.447987933892616, 8.462971823896137, 13.782194899739583, 14.585071755827398, 8.597955794141917, 4.563227469719163, 
-14.532076521708426, 13.45381226483366, 11.399196401468917, 5.609731014005759, 4.4128439741784025, 9.541330302988955, 14.857282524729818]
-
-#Distorted positions of x ray hits
-det_poslist_naive = [7.3970739043175255, 9.969043927071004, 11.155687103627523, 12.617701152923114, 6.123859566884064, 9.16935366898281, 12.826263691058397, 
-6.296776490272765, 12.085119883216763, 7.2625490530895425, 7.312024898348968, 12.606277592882027, 7.297523473333458, 9.204513512933907, 13.802673377001007, 
-9.252594099342495, 6.5457828265494244, 11.89547268828387, 7.275193788274939, 11.096391068874949, 6.294293716908906, 13.615689034680528, 13.494105809955594, 
-6.864587322512722, 12.51744878181858, 12.962190867512057, 11.905302281975082, 12.57952228073988, 6.0141470533911425, 13.36482637837911, 13.367922230572514, 
-12.045010855316573, 6.819076373612105, 7.364189250750114, 11.136676975410673, 9.015279703393345, 12.929208492162473, 13.631702172380752, 9.11582195969817, 
-5.544784441802859, 13.58366037204009, 12.656708210126384, 11.101925112961588, 6.6020812812407685, 5.384706992405885, 9.797815213631731, 13.882345225200464]
-'''
-# find the detector readout for a given angle
-det_readout = pfl.gen_readout()
-
-# to do cross-correlation we must resample the mask to have as
-# many pixels as the detector
-resampled_mask = pfl.resample_mask(det_readout)
-
-#Real and Naive positions if you are generating new ones each time
-det_poslist_real = pfl.get_real_poslist()
-det_poslist_naive = pfl.get_naive_poslist()
-
-def gen_metric(mask, estimated_real):
-    """Generates our metric which is xcor peak - second highest peak
-    Using this metric gives relatively precise results, though not accurate"""
-    
-    try:
-        #Cross correlate the mask and whatever array is passed through
-        xcor = np.correlate(mask, estimated_real, 'full')
-
-        #Find the index of the highest peak and the second highest peak
-        peak_indices, peak_dict = signal.find_peaks(xcor, height=0.2, distance=3)
-        peak_heights = peak_dict['peak_heights']
-        highest_peak_index = peak_indices[np.argmax(peak_heights)]
-        second_highest_peak_index = peak_indices[np.argpartition(peak_heights,-2)[-2]]
-
-        #Get values of the highest peak and second highest peak
-        highest = xcor[highest_peak_index]
-        second_highest = xcor[second_highest_peak_index]
-        
-        #Subtract the 2 and return the value
-        num = highest - second_highest
-        
-        return num
-    except:
-        return 0
-
-target = gen_metric(resampled_mask, det_poslist_naive)
-
-
-
 
 
 def main():
-    
-    #Real and naive positions are currently hard coded to help troubleshoot problems. Normally the real and naive positions
-    #change every time the program is run
-    
-    #Get the original metric
-    og_metric = gen_metric(resampled_mask, det_poslist_naive)
-        
-    # Our cross correlation array
-    ccor = np.correlate(resampled_mask, det_readout, mode='same')
-    if verbose:
-        print('ccor:', ccor)
 
-    # trick to get the lag
+    def fitness_function(solution, solution_idx):
+        """Fitness function for our genetic algorithm. Incorporates our own defined metric (xcor peak - second highest peak)
+        to create the metric that the genetic algorithm will use. The genetic algorithm will try to optimize our own defined
+        metric and try to get it as close to the target metric as possible"""
+
+        print(solution)
+        new = [0]*len(det_poslist_naive)
+        for x in range(len(det_poslist_naive)):
+            new[x] = sigmoid(det_poslist_naive[x], solution[0], solution[1], solution[2], solution[3])
+        metric = gen_metric(resampled_mask, new)
+        output = 1 / abs(metric - target)
+        return output
+
+    # find the detector readout for a given angle
+    det_readout = pfl.gen_readout()
+
+    # to do cross-correlation we must resample the mask to have as
+    # many pixels as the detector
+    resampled_mask = pfl.resample_mask(det_readout)
+    
+    #Stuff to get the lag 
+    ccor = np.correlate(resampled_mask, det_readout, mode='same')
     lag = ccor.argmax() - (len(resampled_mask) - 1)
 
-    sol_per_pop = 50
-    num_genes = 4
+    #Real and Naive positions if you are generating new ones each time
+    det_poslist_real = pfl.get_real_poslist()
+    det_poslist_naive = pfl.get_naive_poslist()
 
-    init_range_low = -5
-    init_range_high = 5
+    #Get our target metric
+    target = gen_metric(resampled_mask, det_poslist_naive)
 
-    mutation_percent_genes = 10
+    #Paramaters for our genetic algorithm
+    sol_per_pop = 50 #Number of solutions per population
+    num_genes = 4 #Number of genes (essentially parameters)
 
+    init_range_low = -5 #Lowest value that a parameter can be
+    init_range_high = 5 #Highest value that a parameter can be
 
+    mutation_percent_genes = 10 #Percent chance that a gene is mutated (increases variety)
+
+    #Create our genetic algorithm object
     ga = pygad.GA(num_generations=100,
                        num_parents_mating=2, 
                        fitness_func=fitness_function,
@@ -139,29 +99,24 @@ def main():
                        num_genes=num_genes,
                        init_range_low=init_range_low,
                        init_range_high=init_range_high,
-                       mutation_percent_genes=mutation_percent_genes)
+                       mutation_percent_genes=mutation_percent_genes,
+                       crossover_probability=0.2)
 
+    #Run the genetic algorithm
     ga.run()
 
-    estimated = [0]*len(det_poslist_naive)
+    #Once we get our solution (our parameters), use the parameters to transform the naive positions into an estimate of the real positions
     solution, solution_fitness, solution_idx = ga.best_solution()
-    print(solution_fitness)
-    
+    estimated = [0]*len(det_poslist_naive)
+
     for x in range(len(det_poslist_naive)):
         estimated[x] = sigmoid(det_poslist_naive[x], solution[0], solution[1], solution[2], solution[3])
 
-    print(det_poslist_naive)
-    #Run our optimize function, which will get us our parameters, our final metric, and our final array
-    #p, metric, generated_real = optimize(resampled_mask, det_poslist_naive, 500)
-    #print(p, metric)
-    #print(generated_real)
+    #Get the metric of our estimated real positions
     metric = gen_metric(resampled_mask, estimated)
+
     # finally we can plot what we've done
-    prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg, og_metric, metric, det_poslist_naive, det_poslist_real)
-    #simphotons()
-    #curvefit(det_poslist_real, det_poslist_naive)
-    
-    #54.17
+    prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg, target, metric, det_poslist_naive, det_poslist_real)
 
 def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg, original_metric, generated_metric, naive_vals, real_vals):
     """At this time all the plotting stuff is shoved here"""
@@ -222,128 +177,32 @@ def sigmoid(x, a, b, c, d):
     """Our sigmoid function"""
     return (a / (x - b)) + c + (d*x)
 
-def gen_estimated(naive_pos_list):
-    """Generates estimated real values by running the given array through our
-    sigmoid function with random parameters. Commented values are the real parameters
-    found while curve fitting"""
-
-    #Randomly generate parameters
-    a = random.uniform(-5, 5) #1.573374532385897
-    b = random.uniform(-5, 5) #4.019185691943018
-    c = random.uniform(-5, 5) #-4.00502684639661
-    d = random.uniform(-5, 5) #1.359444812728886
-   
-    estimated_pos_list = [0]*len(naive_pos_list)
-
-    #Takes the values of the array passed through and runs it through our sigmoid function using the parameters that 
-    #were randomly generated above
-    for x in range(len(naive_pos_list)):
-        
-        num = sigmoid(naive_pos_list[x], a, b, c, d)
-
-        #Prevent negatives
-        if num < 0:
-            estimated_pos_list[x] = 0
-        else:
-            estimated_pos_list[x] = num
- 
-    #Returns the freshly made array (which are estimated real values) as well as the parameters
-    return estimated_pos_list, a, b, c, d
-
-def fitness_function(solution, solution_idx):
-    print(solution)
-    new = [0]*len(det_poslist_naive)
-    for x in range(len(det_poslist_naive)):
-        new[x] = sigmoid(det_poslist_naive[x], solution[0], solution[1], solution[2], solution[3])
-    metric = gen_metric(resampled_mask, new)
-    output = 1 / abs(metric - target)
-    return output
+def gen_metric(mask, estimated_real):
+    """Generates our metric which is xcor peak - second highest peak
+    Using this metric gives relatively precise results, though not accurate"""
     
-def possible_answers(mask, naive_list):
-    """Generates 200 possible answers (Estimated real-value arrays)"""
+    try:
+        #Cross correlate the mask and whatever array is passed through
+        xcor = np.correlate(mask, estimated_real, 'full')
 
-    metric_array = [0]*200
-    estimated_real_array = [0]*200
-    parameter_array = [0]*200
+        #Find the index of the highest peak and the second highest peak
+        peak_indices, peak_dict = signal.find_peaks(xcor, height=0.2, distance=3)
+        peak_heights = peak_dict['peak_heights']
+        highest_peak_index = peak_indices[np.argmax(peak_heights)]
+        second_highest_peak_index = peak_indices[np.argpartition(peak_heights,-2)[-2]]
 
-    #Continuously generates estimated real values. Stores those values and their 
-    #corresponding parameters. Generates the metric using those estimated real values and store that as well
-    count = 0
-    while count < len(metric_array):
-        estimated_real, a, b, c, d = gen_estimated(naive_list)
-        params = [a, b, c, d]
+        #Get values of the highest peak and second highest peak
+        highest = xcor[highest_peak_index]
+        second_highest = xcor[second_highest_peak_index]
         
-        metric_array[count] = gen_metric(mask, estimated_real)
-        parameter_array[count] = params
-        estimated_real_array[count] = estimated_real
-        count += 1
-
-    return metric_array, parameter_array, estimated_real_array
-
-def get_best(metric_arr, param_arr, estimated_real_arr, target_metric):
-    """Retrieves the parameters and estimated values associated with the highest metric from the output of our "possible_answers" function"""
-
-    #Finds the index the highest metric
-    max = metric_arr[0]
-    num = abs(target_metric - max)
-    for x in range(len(metric_arr)):
-        numx = abs(target_metric - metric_arr[x])
-        if numx < num: #metric_arr[x] > max: 
-            num = numx
-            max = metric_arr[x]
-
-    index = metric_arr.index(max)
-
-    #Returns the highest metric and its corresponding parameters and real values
-    return max, param_arr[index], estimated_real_arr[index]
-
-def optimize(mask, naive_vals, target_metric):
-    """Attempt at hill climbing. Probably doesn't work correctly"""
-    # The best fit values of (a, b, c, d) are 
-    # (1.573374532385897, 4.019185691943018, -4.00502684639661, 1.359444812728886) 
-    # whichwe obtained with a "in the lab" calibration process where we did
-    # a curve fit.  This curve fit is described in the section "In-lab
-    # calibration" in the book, and is implemented with the program
-    # "do_in_lab_calibration.py"
-
-    #Set the current array and parameters 
-    checker = [0]*len(naive_vals)
-    current_array = [0]*len(naive_vals)
-    a, b, c, d = 0, 0, 0, 0
-    while current_array == checker:
-        current_array, a, b, c, d = gen_estimated(naive_vals)
-    
-    #parameters = [0, 0, 0, 0]
-    parameters = [a, b, c, d]
-
-    #Gets the current metric, which is the highest peak of the cross correlation
-    #between the mask and naive minus the second highest peak
-    current_metric = gen_metric(mask, current_array)
-    print("Current: ", current_metric)
-    #Generate 200 possible answers (possible "real values"). This comes with the metrics and parameters for each
-    metrics, params, estimated_real_list = possible_answers(mask, naive_vals)
-
-    #Get the best metric and its associating parameters and estimated real values from our list of possible answers 
-    better_metric, better_params, better_array = get_best(metrics, params, estimated_real_list, target_metric)
-    print("Better: ", better_metric)
-    
-    #Essentially repeats what is done above until none of the newly generated possible real values has a higher 
-    #metric than the current
-    while current_metric > better_metric:
-        print("!")
+        #Subtract the 2 and return the value
+        num = highest - second_highest
         
-        current_array = better_array
-        current_metric = better_metric
-        parameters = better_params
+        return num
+    except:
+        return 0
 
-        metrics, params, estimated_real_list = possible_answers(mask, naive_vals)
-
-        better_metric, better_params, better_array = get_best(metrics, params, estimated_real_list, target_metric)
-        print(better_metric)
-
-    #Returns our parameters, metric, and estimated real values
-    return parameters, current_metric, current_array
-
+#These 2 functions are here in case you want to see our original graphs
 def simphotons():
     """Uses postfactolib module to simulate photons"""
     det_readout = pfl.gen_readout()
