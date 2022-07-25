@@ -47,8 +47,6 @@ theta_deg = 0             # incidence angle, 0 if perpendicular
  #Initializing our calibrate class within the postfactolib module so that we can access the functions
 pfl = postfactolib.calibrate(mask, mask_width_cm, mask_det_offset_cm, det_width_cm, det_height_cm, n_det_pix, n_photons, theta_deg)
 
-
-
 def main():
 
     def fitness_function(solution, solution_idx):
@@ -89,7 +87,7 @@ def main():
     init_range_low = -5 #Lowest value that a parameter can be
     init_range_high = 5 #Highest value that a parameter can be
 
-    mutation_percent_genes = 10 #Percent chance that a gene is mutated (increases variety)
+    mutation_percent_genes = 5 #Percent chance that a gene is mutated (increases variety)
 
     #Create our genetic algorithm object
     ga = pygad.GA(num_generations=100,
@@ -100,6 +98,7 @@ def main():
                        init_range_low=init_range_low,
                        init_range_high=init_range_high,
                        mutation_percent_genes=mutation_percent_genes,
+                       mutation_num_genes=4,
                        crossover_probability=0.2)
 
     #Run the genetic algorithm
@@ -190,13 +189,17 @@ def gen_metric(mask, estimated_real):
         peak_heights = peak_dict['peak_heights']
         highest_peak_index = peak_indices[np.argmax(peak_heights)]
         second_highest_peak_index = peak_indices[np.argpartition(peak_heights,-2)[-2]]
+        third_highest_peak_index = peak_indices[np.argpartition(peak_heights, -3)[-3]]
+        fourth_highest_peak_index = peak_indices[np.argpartition(peak_heights, -4)[-4]]
 
         #Get values of the highest peak and second highest peak
         highest = xcor[highest_peak_index]
         second_highest = xcor[second_highest_peak_index]
+        third_highest = xcor[third_highest_peak_index]
         
+
         #Subtract the 2 and return the value
-        num = highest - second_highest
+        num = highest - (second_highest * third_highest)
         
         return num
     except:
