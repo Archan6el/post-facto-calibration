@@ -21,9 +21,7 @@ mask_real = [1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
              1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0,
              1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1]
 
-# some parameters of the run -- we might want to find a way to
-# encapsulate them so that we can do sweeps by passing around a single
-# object
+# some parameters of the run -- based on proportional counter on HETE-2
 n_photons = 100
 noise_fraction = 0.0
 distortion_dial = 1         # limits are [0, 1]
@@ -37,9 +35,6 @@ n_det_pix = int(mask_width_cm / det_pix_size_cm + 0.5) # +0.5? or +1? or +0?
 mask_det_offset_cm = (mask_width_cm - det_width_cm) / 2
 theta_deg = 0             # incidence angle, 0 if perpendicular
 
-
-#print(pearsonr(real_vals, naive_vals))
-
 #print(n_det_pix)
 
 # random.seed(1234)               # FIXME: for debugging only
@@ -50,7 +45,7 @@ pfl = postfactolib.calibrate(mask, mask_width_cm, mask_det_offset_cm, det_width_
 def main():
 
     def fitness_function(solution, solution_idx):
-        """Fitness function for our genetic algorithm. Incorporates our own defined metric (xcor peak - second highest peak)
+        """Fitness function for our genetic algorithm. Incorporates our own defined metric (xcor peak - (second highest peak * third highest peak))
         to create the metric that the genetic algorithm will use. The genetic algorithm will try to optimize our own defined
         metric and try to get it as close to the target metric as possible"""
 
@@ -63,7 +58,7 @@ def main():
         return output
 
     # find the detector readout for a given angle
-    det_readout = pfl.gen_readout()
+    det_readout = pfl.gen_readout(distortion_dial=distortion_dial)
 
     # to do cross-correlation we must resample the mask to have as
     # many pixels as the detector
@@ -76,7 +71,7 @@ def main():
     #Real and Naive positions if you are generating new ones each time
     det_poslist_real = pfl.get_real_poslist()
     det_poslist_naive = pfl.get_naive_poslist()
-
+  
     #Get our target metric
     target = gen_metric(resampled_mask, det_poslist_naive)
 
@@ -113,6 +108,9 @@ def main():
 
     #Get the metric of our estimated real positions
     metric = gen_metric(resampled_mask, estimated)
+
+    #print(det_poslist_real)
+    #print(estimated)
 
     # finally we can plot what we've done
     prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg, target, metric, det_poslist_naive, det_poslist_real)
@@ -167,7 +165,7 @@ def prepare_plots(mask, resampled_mask, det_readout, estimated, lag, theta_deg, 
 
     ax[5].scatter(real_vals, naive_vals, label='Real to Naive')
     ax[5].scatter(estimated, naive_vals, label = 'Estimated to Naive')
-    ax[5].set_title(f'Lag is {lag} - Original Metric is {original_metric} - Generated Metric is {generated_metric}')
+    ax[5].set_title(f'Original Metric is {original_metric} - Generated Metric is {generated_metric}')
     ax[5].legend(loc = 'upper left')
 
     plt.show()
@@ -177,28 +175,33 @@ def sigmoid(x, a, b, c, d):
     return (a / (x - b)) + c + (d*x)
 
 def gen_metric(mask, estimated_real):
-    """Generates our metric which is xcor peak - second highest peak
-    Using this metric gives relatively precise results, though not accurate"""
+    """Generates our metric which is xcor peak - (second highest peak * third highest peak)
+    This metric is getting us very very close to the actual measurments. Usually it'll be close, but not quite.
+    Other times it'll be spot on"""
     
     try:
         #Cross correlate the mask and whatever array is passed through
         xcor = np.correlate(mask, estimated_real, 'full')
 
-        #Find the index of the highest peak and the second highest peak
+        #Find the index of the peaks
         peak_indices, peak_dict = signal.find_peaks(xcor, height=0.2, distance=3)
         peak_heights = peak_dict['peak_heights']
+
         highest_peak_index = peak_indices[np.argmax(peak_heights)]
         second_highest_peak_index = peak_indices[np.argpartition(peak_heights,-2)[-2]]
         third_highest_peak_index = peak_indices[np.argpartition(peak_heights, -3)[-3]]
         fourth_highest_peak_index = peak_indices[np.argpartition(peak_heights, -4)[-4]]
+        fifth_highest_peak_index = peak_indices[np.argpartition(peak_heights, -5)[-5]]
 
-        #Get values of the highest peak and second highest peak
+        #Get values of peaks
         highest = xcor[highest_peak_index]
         second_highest = xcor[second_highest_peak_index]
         third_highest = xcor[third_highest_peak_index]
+        fourth_highest = xcor[fourth_highest_peak_index]
+        fifth_highest = xcor[fifth_highest_peak_index]
         
 
-        #Subtract the 2 and return the value
+        #Multiply second and third. Subtract that from the first
         num = highest - (second_highest * third_highest)
         
         return num
