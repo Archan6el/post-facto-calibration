@@ -1,9 +1,41 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from math import sin, pi
 import random
 from collections import OrderedDict
 from scipy.optimize import curve_fit
+
+
+def distort(x_good, distortion_dial):
+    """Bare core of distortion function, mapping [0, 1] -> [0, 1], must be
+    bijective.  Example: x -> x + c*0.1*sin(2*pi*x).  The
+    distorion_dial goes from 0 (no disortion) to 1 (max distortion).
+    """
+    assert(x_good >= 0 and x_good <= 1)
+    x_bad = x_good + distortion_dial*0.1*sin(2*pi*x_good)
+    #x_bad = ((x_good**(0.25) + x_good**9) / 2 - x_good) * distortion_dial + x_good
+    assert(x_bad >= 0 and x_bad <= 1)
+    return x_bad
+
+def calibration_none(x_bad, param_set):
+    """Function that does no calibration."""
+    return x_bad
+
+def calibration_sigmoid(x_bad, param_set):
+    """Applies the rational function y = a/(x-b) + c + d*x."""
+    [a, b, c, d] = param_set
+    return (a / (x_bad - b)) + c + (d*x_bad)
+    #[L, x0, k, b] = param_set
+    #return L / (1 + np.exp(-k*(x_bad-x0))) + b
+
+
+'''
+def calibration_esoteric(x_bad, param_set):
+    """Applies a big polynomial to x_bad."""
+    [a, b, c, d, e, f, g] = param_set
+    return a*x**6 + b*x**5 + c*x**4 + d*x**3 + e*x**2 + f*x + g
+'''  
 
 class calibrate:
 
@@ -26,6 +58,8 @@ class calibrate:
         self.noise = noise_num
         self.det_poslist_real = []
         self.det_poslist_naive = []
+        self.det_poslist_calibrated = []
+
 
     def resample_mask(self, det_readout):
         """Resamples the mask based on the length of the detector readout"""
@@ -63,10 +97,8 @@ class calibrate:
             print(det_pos, self.angle_deg, valid)
         return valid
 
-    def gen_readout(self, distortion_dial=0, verbose=None):
-        """Given a mask and an incidence angle, simulate photons hitting the
-        detector through that mask and at that angle
-        """
+    def gen_readout(self, calibration_func, param_set, distortion_dial=0, verbose=None):
+        """Simulate photons hitting the detector through the mask and at the set angle"""
         # #Contains our extrapolated mask
         readout = np.zeros(self.n_det_pix)
         # simulate a bunch of photons hitting the detector
@@ -78,7 +110,7 @@ class calibrate:
             # position
             det_pos_cm = self.mask_det_offset_cm + random.random() * self.det_width_cm
             distorted_pos_cm = self.apply_distortion(det_pos_cm, distortion_dial)
-
+            recalibrated_pos_cm = calibration_func(distorted_pos_cm, param_set)
             
             if verbose:
                 print('det_pos_cm:', det_pos_cm, distorted_pos_cm,
@@ -96,28 +128,39 @@ class calibrate:
             if random.random() < self.noise:
                 is_valid = True     # noise is always valid
             else:
-                is_valid = self.mask_pos_angle_consistent(distorted_pos_cm, verbose)
+                if(param_set is None):
+                    is_valid = self.mask_pos_angle_consistent(distorted_pos_cm, verbose)
+                else:
+                    is_valid = self.mask_pos_angle_consistent(recalibrated_pos_cm, verbose)
+
             if is_valid:
-                readout_ind = int(self.n_det_pix * distorted_pos_cm / self.mask_width_cm)
-                assert(readout_ind >= 0 and readout_ind < self.n_det_pix)
-                readout[readout_ind] += 1 # yay! I got a count on the detector
+                if(param_set is None):
+                    readout_ind = int(self.n_det_pix * distorted_pos_cm / self.mask_width_cm)
+                    assert(readout_ind >= 0 and readout_ind < self.n_det_pix)
+                    readout[readout_ind] += 1 # yay! I got a count on the detector
+                else:
+                    readout_ind = int(self.n_det_pix * recalibrated_pos_cm / self.mask_width_cm)
+                    #assert(readout_ind >= 0 and readout_ind < self.n_det_pix)
+                    readout[readout_ind] += 1 # yay! I got a count on the detector
 
                 self.det_poslist_real.append(det_pos_cm)
                 self.det_poslist_naive.append(distorted_pos_cm)
+                self.det_poslist_calibrated.append(recalibrated_pos_cm)
 
         return readout
 
     def apply_distortion(self, x_real, distortion_dial=0):
         """Applies a simple distortion to the signal -- in this case something
         like x -> x + c*sin(2*pi*x / scale)
-
         """
-        x_bad = x_real + distortion_dial * math.sin(2*math.pi*(x_real / self.mask_width_cm))
+        x_01range = (x_real - self.mask_det_offset_cm) / self.det_width_cm
+        assert(x_01range >= 0 and x_01range <= 1)
+        x_distorted = distort(x_01range, distortion_dial)
+        x_bad = self.mask_det_offset_cm + x_distorted * self.det_width_cm
         return x_bad
 
 
     def plot_xcor(self, resampled_mask, det_readout, ccor, lag=None, save=None):
-        
         """Plots cross correlation between resampled mask and detector readout"""
         # X axes of graphs
         xaxisForMask = np.arange(0, len(self.mask), 1)
@@ -167,14 +210,14 @@ class calibrate:
                 ofname = f'mask_readout_ccor.{suffix}'
                 print(f'saving file {ofname}')
                 plt.savefig(ofname)
-        plt.show()
+        # plt.show()
+        return plt
 
     def plot_curvefit(self, real_pos, naive_pos, fit=None, verbose=None):
+        """Uses scipy to plot our data and curve fitting lines"""
         if fit is None:
             fit = 'all'
 
-        """Uses scipy to plot our data and curve fitting lines"""
-        
         #create dictionary mapping x and y values (x-> key, y->value)
         count = 0
         dict = {}
@@ -201,8 +244,15 @@ class calibrate:
 
         
         def sigmoid(x, a, b, c, d):
-            return (a / (x - b)) + c + (d*x)
-
+            y = (a / (x - b)) + c + (d*x)
+            return y
+        '''
+        def sigmoid(x, L ,x0, k, b):
+            #x = (x - self.mask_det_offset_cm) / self.det_width_cm
+            y = L / (1 + np.exp(-k*(x-x0))) + b
+            #y = self.mask_det_offset_cm + y * self.det_width_cm
+            return (y)
+        '''
         #linear function
         params, _ = curve_fit(func1, x, y)
         linear_a = params[0]
@@ -218,17 +268,28 @@ class calibrate:
         cubic_a, cubic_b, cubic_c = params[0], params[1], params[2]
         yfit3 = cubic_a*x**3+cubic_b*x**2+cubic_c
 
-        #sigmoid function
-        params, _  = curve_fit(sigmoid, x, y)
+        #sigmoid function   
+        
+        params, _  = curve_fit(sigmoid, x, y, bounds=(-10, 10))
         sig_a, sig_b, sig_c, sig_d = params[0], params[1], params[2], params[3]
         yfitSig = (sig_a / (x - sig_b)) + sig_c + (sig_d*x)
-        
+        '''
+        p0 = [max(y), np.median(x),1,min(y)]
+        print(p0)
+        print(-max(y), max(y))
+        params, _ = curve_fit(sigmoid, x, y, p0, bounds=(-max(y), max(y)), method='trf')
+        sig_L, sig_x0, sig_k, sig_b = params[0], params[1], params[2], params[3]
+        yfitSig = sig_L / (1 + np.exp(-sig_k*(x-sig_x0))) + sig_b
+        '''
+
         if verbose:
             print('Parameters:')
             print('Linear: ', linear_a)
             print('Quadratic: ', quadratic_a)
             print('Cubic: ', cubic_a, cubic_b, cubic_c)
             print('Sigmoid: ', sig_a, sig_b, sig_c, sig_d)
+            #print('Sigmoid: ', sig_L, sig_x0, sig_k, sig_b)
+         
         #plotting the graphs here
         #yfit# -> the # correlates to the highest degree of exponent of the highest x
         plt.plot(x, y, 'bo', label="y-original")
@@ -250,6 +311,7 @@ class calibrate:
         plt.legend(loc='best', fancybox=True, shadow=True)
         plt.grid(True)
         plt.show() 
+        return plt
 
     def get_real_poslist(self):
         """Returns the real positions of where x rays hit"""
@@ -258,13 +320,16 @@ class calibrate:
     def get_naive_poslist(self):
         """Returns the naive (distorted) positions of where x rays hit"""
         return self.det_poslist_naive
+    
+    def get_estimated_poslist(self):
+        return self.det_poslist_calibrated
 
     def set_theta(self, angle):
-        """Allows user to set the theta angle. Used for animating plots"""
+        """Sets the theta angle. Used for animating plots"""
         self.angle_deg = angle
 
     def set_noise(self, noise_val):
-        """Allows user to set the noise value. Used for animating plots"""
+        """Sets the noise value. Used for animating plots"""
         self.noise = noise_val
 
     def animate(self, range_vals, mode):
@@ -284,7 +349,7 @@ class calibrate:
                 self.set_noise(num)
 
             # find the detector readout for a given angle
-            det_readout = self.gen_readout()
+            det_readout = self.gen_readout(calibration_none, None)
             resampled_mask = self.resample_mask(det_readout)
         
             # Our cross correlation array
