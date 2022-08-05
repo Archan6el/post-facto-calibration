@@ -1,23 +1,5 @@
 # post-facto-calibration
 
-**Quickly Getting Started:**
+This repo served as a holding place of "work in progress" / unfinished files related to the research on post facto calibration of a proportional counter. The research is now complete!
 
-Clone this repo with:
-
-`git clone https://github.com/Archan6el/post-facto-calibration`
-
-**Each folder will have its own readme with information about its contents**
-
-All program files can be ran using python3
-
-
-There are python libraries needed to run the code. If not already installed, install them on Linux with
-```
-pip3 install matplotlib
-pip3 install numpy 
-pip3 install random
-pip3 install scipy
-```
-*For looking at README files from the root "postfacto" directory:*
-
-For info about coded apertures: `cat codedaperture/README.md`
+**You can find the finalized files and results here:** https://codeberg.org/markgalassi/post-facto-calibration
